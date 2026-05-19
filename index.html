@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle Financeiro</title>
+
+  <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:,">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+  <!-- LOGIN -->
+  <section id="tela-login" class="tela active">
+    <div class="login-box">
+      <h1>💰 Controle Financeiro</h1>
+
+      <input type="email" id="email-login" placeholder="Seu e-mail">
+      <input type="password" id="senha-login" placeholder="Sua senha">
+
+      <div class="login-buttons">
+        <button id="btn-login">Entrar</button>
+        <button id="btn-cadastro">Criar Conta</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- APP -->
+  <main class="app-container">
+
+ <!-- SUBSTITUA APENAS O SECTION DO DASHBOARD POR ESSE -->
+
+<section id="tela-dashboard" class="tela">
+
+  <header class="app-header dashboard-topo">
+
+    <div>
+      <h2>Dashboard</h2>
+
+      <p id="texto-boasvindas">
+        Bem-vindo 👋
+      </p>
+    </div>
+
+    <button id="btn-logout" class="btn-logout">
+      Sair
+    </button>
+
+  </header>
+
+  <!-- PROGRESSO -->
+  <div class="card">
+
+    <h3>Progresso do mês</h3>
+
+    <div class="barra-container">
+      <div id="barra-progresso"></div>
+    </div>
+
+    <p id="texto-progresso">
+      Dia 1 de 30
+    </p>
+
+  </div>
+
+  <!-- RENDA -->
+  <div class="card destaque-card">
+
+    <h3>Renda Total</h3>
+
+    <p class="valor total" id="renda-total">
+      R$ 0,00
+    </p>
+
+  </div>
+
+  <!-- KPI -->
+  <div class="kpi-grid">
+
+    <div class="card">
+      <h3>Contas Início</h3>
+
+      <p class="valor despesa" id="contas-inicio">
+        R$ 0,00
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Contas Meio</h3>
+
+      <p class="valor despesa" id="contas-meio">
+        R$ 0,00
+      </p>
+    </div>
+
+  </div>
+
+  <!-- RESUMO -->
+  <div class="card">
+
+    <h3>Resumo</h3>
+
+    <div class="resumo-item">
+      <span>Saídas</span>
+
+      <strong id="saidas-total">
+        R$ 0,00
+      </strong>
+    </div>
+
+    <div class="resumo-item destaque">
+      <span>Sobra</span>
+
+      <strong id="sobra-total">
+        R$ 0,00
+      </strong>
+    </div>
+
+  </div>
+
+  <!-- GRÁFICO -->
+  <div class="card">
+
+    <h3>Distribuição</h3>
+
+    <div class="chart-container">
+      <canvas id="graficoPizza"></canvas>
+    </div>
+
+  </div>
+
+</section>
+    <!-- LANÇAMENTO -->
+    <section id="tela-lancar" class="tela">
+
+      <header class="app-header">
+        <h2>Novo Lançamento</h2>
+      </header>
+
+      <form id="form-lancamento" class="card">
+
+        <div class="input-group">
+          <label>Tipo</label>
+
+          <select id="tipo">
+            <option value="ganho">Receita</option>
+            <option value="gasto">Despesa</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label>Descrição</label>
+          <input type="text" id="descricao">
+        </div>
+
+        <div class="input-group">
+          <label>Valor</label>
+          <input type="number" id="valor">
+        </div>
+
+        <div id="campos-despesa">
+
+          <div class="input-group">
+            <label>Categoria</label>
+
+            <select id="categoria">
+              <option value="Essencial">Essencial</option>
+              <option value="Lazer">Lazer</option>
+              <option value="Cartão">Cartão</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label>Vencimento</label>
+
+            <select id="vencimento">
+              <option value="inicio">Início</option>
+              <option value="meio">Meio</option>
+              <option value="fim">Fim</option>
+            </select>
+          </div>
+
+        </div>
+
+        <button type="submit">
+          Salvar
+        </button>
+
+      </form>
+
+    </section>
+
+    <!-- EXTRATO -->
+    <section id="tela-extrato" class="tela">
+
+      <header class="app-header">
+        <h2>Extrato</h2>
+      </header>
+
+      <div class="filtros">
+
+        <button class="btn-filtro active" data-filtro="Todos">
+          Todos
+        </button>
+
+        <button class="btn-filtro" data-filtro="inicio">
+          Início
+        </button>
+
+        <button class="btn-filtro" data-filtro="meio">
+          Meio
+        </button>
+
+        <button class="btn-filtro" data-filtro="Lazer">
+          Lazer
+        </button>
+
+      </div>
+
+      <div id="lista-gastos"></div>
+
+    </section>
+
+  </main>
+
+  <!-- MENU -->
+  <nav class="bottom-nav">
+
+    <a href="#" class="nav-item active" data-tela="tela-dashboard">
+      📊 Dashboard
+    </a>
+
+    <a href="#" class="nav-item" data-tela="tela-lancar">
+      ➕ Lançar
+    </a>
+
+    <a href="#" class="nav-item" data-tela="tela-extrato">
+      📑 Extrato
+    </a>
+
+  </nav>
+
+  <script src="js/script.js"></script>
+
+</body>
+</html>
