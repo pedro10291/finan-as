@@ -319,49 +319,39 @@ async function lerComprovante() {
   const btnEl = document.getElementById("btn-ler-comprovante");
 
   if (!inputEl.files || inputEl.files.length === 0) {
-    alert("Selecione uma imagem de comprovante primeiro.");
+    alert("Selecione uma imagem primeiro!");
     return;
   }
 
-  const arquivo = inputEl.files[0];
-  statusEl.innerText = "⏳ Lendo comprovante... Aguarde (pode demorar alguns segundos).";
-  btnEl.disabled = true; // Desabilita o botão para evitar cliques duplicados
+  statusEl.innerText = "⏳ Processando...";
+  btnEl.disabled = true;
 
   try {
-    // Melhoria: Caminhos explícitos para garantir o carregamento do worker e dos dados de idioma
+    // Usamos o Tesseract global, mas garantindo os caminhos corretos
     const { data: { text } } = await Tesseract.recognize(
-      arquivo,
+      inputEl.files[0],
       'por',
-      { 
-        workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js',
-        langPath: 'https://tessdata.projectnaptha.com/4.0.0', 
-        corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5/dist/tesseract-core.wasm.js',
-        logger: m => console.log(m) 
+      {
+        workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.0.0/dist/worker.min.js',
+        langPath: 'https://tessdata.projectnaptha.com/4.0.0',
+        corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.0.0/dist/tesseract-core.wasm.js',
       }
     );
 
-    statusEl.innerText = "✅ Leitura concluída!";
-    
     const regexMonetario = /(?:R\$|VALOR)\s*[:]?\s*([\d\.]+(?:,\d{2}))/i;
     const match = text.match(regexMonetario);
 
-    if (match && match[1]) {
-      let valorExtraido = match[1].replace(/\./g, '').replace(',', '.');
-      document.getElementById("valor").value = parseFloat(valorExtraido);
-      document.getElementById("descricao").value = "Comprovante Lido";
-      
-      statusEl.innerText = `✅ Valor R$ ${match[1]} encontrado com sucesso!`;
-      statusEl.style.color = "green";
+    if (match) {
+      document.getElementById("valor").value = match[1].replace(/\./g, '').replace(',', '.');
+      document.getElementById("descricao").value = "Comprovante Lido via OCR";
+      statusEl.innerText = "✅ Valor extraído!";
     } else {
-      statusEl.innerText = "⚠️ Não foi possível identificar o valor. Preencha manualmente.";
-      statusEl.style.color = "#d97706";
+      statusEl.innerText = "⚠️ Valor não detectado. Digite manualmente.";
     }
-
-  } catch (erro) {
-    console.error("Erro no OCR:", erro);
-    statusEl.innerText = "❌ Ocorreu um erro ao ler a imagem.";
-    statusEl.style.color = "red";
+  } catch (err) {
+    console.error(err);
+    statusEl.innerText = "❌ Erro na leitura.";
   } finally {
-    btnEl.disabled = false; // Reabilita o botão ao finalizar
+    btnEl.disabled = false;
   }
 }
