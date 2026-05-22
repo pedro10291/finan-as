@@ -316,6 +316,7 @@ function formatarMoeda(valor) {
 async function lerComprovante() {
   const inputEl = document.getElementById("input-comprovante");
   const statusEl = document.getElementById("ocr-status");
+  const btnEl = document.getElementById("btn-ler-comprovante");
 
   if (!inputEl.files || inputEl.files.length === 0) {
     alert("Selecione uma imagem de comprovante primeiro.");
@@ -324,30 +325,35 @@ async function lerComprovante() {
 
   const arquivo = inputEl.files[0];
   statusEl.innerText = "⏳ Lendo comprovante... Aguarde (pode demorar alguns segundos).";
+  btnEl.disabled = true; // Desabilita o botão para evitar cliques duplicados
 
   try {
+    // Melhoria: Caminhos explícitos para garantir o carregamento do worker e dos dados de idioma
     const { data: { text } } = await Tesseract.recognize(
       arquivo,
       'por',
-      { logger: m => console.log(m) }
+      { 
+        workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js',
+        langPath: 'https://tessdata.projectnaptha.com/4.0.0', 
+        corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5/dist/tesseract-core.wasm.js',
+        logger: m => console.log(m) 
+      }
     );
 
     statusEl.innerText = "✅ Leitura concluída!";
-    console.log("Texto Extraído:\n", text);
-
+    
     const regexMonetario = /(?:R\$|VALOR)\s*[:]?\s*([\d\.]+(?:,\d{2}))/i;
     const match = text.match(regexMonetario);
 
     if (match && match[1]) {
       let valorExtraido = match[1].replace(/\./g, '').replace(',', '.');
-      
       document.getElementById("valor").value = parseFloat(valorExtraido);
       document.getElementById("descricao").value = "Comprovante Lido";
       
       statusEl.innerText = `✅ Valor R$ ${match[1]} encontrado com sucesso!`;
       statusEl.style.color = "green";
     } else {
-      statusEl.innerText = "⚠️ Não foi possível identificar o valor na imagem. Preencha manualmente.";
+      statusEl.innerText = "⚠️ Não foi possível identificar o valor. Preencha manualmente.";
       statusEl.style.color = "#d97706";
     }
 
@@ -355,5 +361,7 @@ async function lerComprovante() {
     console.error("Erro no OCR:", erro);
     statusEl.innerText = "❌ Ocorreu um erro ao ler a imagem.";
     statusEl.style.color = "red";
+  } finally {
+    btnEl.disabled = false; // Reabilita o botão ao finalizar
   }
 }
