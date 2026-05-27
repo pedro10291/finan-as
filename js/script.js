@@ -23,7 +23,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const { data: { session } } = await meuSupabase.auth.getSession();
-
     if (session) {
       liberarSistema();
       carregarDados();
@@ -43,7 +42,6 @@ function iniciarEventos() {
   document.getElementById("btn-cadastro").addEventListener("click", fazerCadastro);
   document.getElementById("btn-logout")?.addEventListener("click", logout);
   document.getElementById("form-lancamento").addEventListener("submit", salvarLancamento);
-  
   document.getElementById("btn-ler-comprovante").addEventListener("click", lerComprovante);
 
   const inputComprovante = document.getElementById("input-comprovante");
@@ -63,14 +61,11 @@ function iniciarEventos() {
 
 function iniciarNavegacao() {
   const links = document.querySelectorAll(".nav-item");
-
   links.forEach(link => {
     link.addEventListener("click", e => {
       e.preventDefault();
-
       document.querySelectorAll(".nav-item").forEach(item => item.classList.remove("active"));
       document.querySelectorAll(".tela").forEach(tela => tela.classList.remove("active"));
-
       link.classList.add("active");
       document.getElementById(link.dataset.tela).classList.add("active");
     });
@@ -81,66 +76,41 @@ function iniciarGrafico() {
   const canvas = document.getElementById("graficoPizza");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
-
   grafico = new Chart(ctx, {
     type: "doughnut",
     data: {
       labels: ["Gastos", "Sobra"],
-      datasets: [{
-        data: [0, 0],
-        backgroundColor: ["#64748B", "#163E3C"]
-      }]
+      datasets: [{ data: [0, 0], backgroundColor: ["#64748B", "#163E3C"] }]
     },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: "bottom" } }
-    }
+    options: { responsive: true, plugins: { legend: { position: "bottom" } } }
   });
 }
 
 async function fazerLogin(e) {
-  if (e) e.preventDefault(); 
-
+  if (e) e.preventDefault();
   const email = document.getElementById("email-login").value;
   const password = document.getElementById("senha-login").value;
-
-  if (!email || !password) {
-    alert("Preencha email e senha");
-    return;
-  }
-
+  if (!email || !password) { alert("Preencha email e senha"); return; }
   try {
     const { error } = await meuSupabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    
     document.getElementById("email-login").value = "";
     document.getElementById("senha-login").value = "";
-    
     liberarSistema();
     carregarDados();
-  } catch (err) {
-    alert("Erro ao entrar: " + err.message);
-  }
+  } catch (err) { alert("Erro ao entrar: " + err.message); }
 }
 
 async function fazerCadastro(e) {
-  if (e) e.preventDefault(); 
-
+  if (e) e.preventDefault();
   const email = document.getElementById("email-login").value;
   const password = document.getElementById("senha-login").value;
-
-  if (!email || !password) {
-    alert("Preencha email e senha");
-    return;
-  }
-
+  if (!email || !password) { alert("Preencha email e senha"); return; }
   try {
     const { error } = await meuSupabase.auth.signUp({ email, password });
     if (error) throw error;
     alert("Conta criada com sucesso! Agora você pode entrar.");
-  } catch (err) {
-    alert("Erro ao cadastrar: " + err.message);
-  }
+  } catch (err) { alert("Erro ao cadastrar: " + err.message); }
 }
 
 async function logout() {
@@ -160,32 +130,19 @@ async function carregarDados() {
   try {
     const { data: { user } } = await meuSupabase.auth.getUser();
     if (!user) return;
-
     const { data, error } = await meuSupabase
-      .from("movimentacoes")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("id", { ascending: false });
-
+      .from("movimentacoes").select("*").eq("user_id", user.id).order("id", { ascending: false });
     if (error) throw error;
     movimentacoes = data || [];
     atualizarDashboard();
-  } catch (err) {
-    console.error(err);
-  }
+  } catch (err) { console.error(err); }
 }
 
 async function salvarLancamento(e) {
   e.preventDefault();
-
   try {
     const { data: { user } } = await meuSupabase.auth.getUser();
-
-    if (!user) {
-      alert("Usuário não autenticado");
-      return;
-    }
-
+    if (!user) { alert("Usuário não autenticado"); return; }
     const novaMovimentacao = {
       user_id: user.id,
       tipo: document.getElementById("tipo").value,
@@ -194,40 +151,24 @@ async function salvarLancamento(e) {
       categoria: document.getElementById("categoria").value,
       vencimento: document.getElementById("vencimento").value
     };
-
-    const { data, error } = await meuSupabase
-      .from("movimentacoes")
-      .insert([novaMovimentacao])
-      .select();
-
+    const { data, error } = await meuSupabase.from("movimentacoes").insert([novaMovimentacao]).select();
     if (error) throw error;
-
     movimentacoes.unshift(data[0]);
     atualizarDashboard();
     document.getElementById("form-lancamento").reset();
-    
     const ocrStatus = document.getElementById("ocr-status");
-    if(ocrStatus) ocrStatus.innerText = "";
-    
+    if (ocrStatus) ocrStatus.innerText = "";
     const labelComprovante = document.getElementById("label-comprovante");
-    if(labelComprovante) {
+    if (labelComprovante) {
       labelComprovante.innerHTML = `📁 Escolher Imagem`;
       labelComprovante.classList.remove("arquivo-selecionado");
     }
-    
     alert("Lançamento salvo!");
-
-  } catch (err) {
-    alert(err.message);
-  }
+  } catch (err) { alert(err.message); }
 }
 
 function atualizarDashboard() {
-  let renda = 0;
-  let gastos = 0;
-  let inicio = 0;
-  let meio = 0;
-
+  let renda = 0, gastos = 0, inicio = 0, meio = 0;
   movimentacoes.forEach(item => {
     if (item.tipo === "ganho") {
       renda += Number(item.valor);
@@ -237,13 +178,11 @@ function atualizarDashboard() {
       if (item.vencimento === "meio") meio += Number(item.valor);
     }
   });
-
   elementos.rendaTotal.innerText = formatarMoeda(renda);
   elementos.contasInicio.innerText = formatarMoeda(inicio);
   elementos.contasMeio.innerText = formatarMoeda(meio);
   elementos.saidas.innerText = formatarMoeda(gastos);
   elementos.sobra.innerText = formatarMoeda(renda - gastos);
-
   atualizarGrafico(gastos, renda);
   atualizarProgressoMes();
   renderizarExtrato();
@@ -260,22 +199,18 @@ function atualizarProgressoMes() {
   const diaAtual = hoje.getDate();
   const totalDias = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
   const porcentagem = (diaAtual / totalDias) * 100;
-  
   const barra = document.getElementById("barra-progresso");
   const texto = document.getElementById("texto-progresso");
-
   if (barra) barra.style.width = `${porcentagem}%`;
   if (texto) texto.innerText = `Dia ${diaAtual} de ${totalDias}`;
 }
 
 function renderizarExtrato() {
   elementos.lista.innerHTML = "";
-
-  if(movimentacoes.length === 0) {
+  if (movimentacoes.length === 0) {
     elementos.lista.innerHTML = "<p style='text-align:center; color:#94A3B8; margin-top:20px;'>Nenhum lançamento encontrado.</p>";
     return;
   }
-
   movimentacoes.forEach(item => {
     elementos.lista.innerHTML += `
       <div class="item-gasto">
@@ -284,26 +219,21 @@ function renderizarExtrato() {
           <span class="badge">${item.categoria || "Geral"}</span>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
-          <strong style="color: ${item.tipo === 'ganho' ? '#16a34a' : 'var(--text)'}">${formatarMoeda(item.valor)}</strong>
+          <strong style="color:${item.tipo === 'ganho' ? '#16a34a' : 'var(--text)'}">${formatarMoeda(item.valor)}</strong>
           <button class="btn-excluir" onclick="excluirMovimentacao('${item.id}')">✕</button>
         </div>
-      </div>
-    `;
+      </div>`;
   });
 }
 
 window.excluirMovimentacao = async function(id) {
-  const confirmar = confirm("Excluir lançamento?");
-  if (!confirmar) return;
-
+  if (!confirm("Excluir lançamento?")) return;
   try {
     const { error } = await meuSupabase.from("movimentacoes").delete().eq("id", id);
     if (error) throw error;
     movimentacoes = movimentacoes.filter(item => item.id !== id);
     atualizarDashboard();
-  } catch (err) {
-    alert(err.message);
-  }
+  } catch (err) { alert(err.message); }
 };
 
 function formatarMoeda(valor) {
@@ -313,6 +243,34 @@ function formatarMoeda(valor) {
 // ==========================================
 // LEITOR DE COMPROVANTE — Claude Vision API
 // ==========================================
+// Redimensiona imagem para max 1024px e retorna base64 — compatível com Safari/iOS
+function redimensionarImagem(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Falha ao ler arquivo"));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Falha ao carregar imagem"));
+      img.onload = () => {
+        const MAX = 1024;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        resolve(dataUrl.split(",")[1]);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 async function lerComprovante() {
   const inputEl = document.getElementById("input-comprovante");
   const btnEl = document.getElementById("btn-ler-comprovante");
@@ -324,37 +282,34 @@ async function lerComprovante() {
   }
 
   const file = inputEl.files[0];
-
-  if (previewEl) {
-    const fr = new FileReader(); fr.onload = e => { previewEl.src = e.target.result; }; fr.readAsDataURL(file);
-    previewEl.style.display = "block";
-  }
-
-  mostrarStatus("⏳ Analisando comprovante...", "carregando");
+  mostrarStatus("⏳ Preparando imagem...", "carregando");
   btnEl.disabled = true;
 
   try {
-    const base64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(",")[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+    const base64 = await redimensionarImagem(file);
 
-    const mediaType = file.type || "image/jpeg";
+    if (previewEl) {
+      previewEl.src = "data:image/jpeg;base64," + base64;
+      previewEl.style.display = "block";
+    }
 
-    // Chama o proxy no Vercel (que repassa pra API Claude com segurança)
+    mostrarStatus("⏳ Enviando para análise...", "carregando");
+
     const response = await fetch("/api/analisar-comprovante", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ base64, mediaType })
+      body: JSON.stringify({ base64, mediaType: "image/jpeg" })
     });
 
+    const corpo = await response.text();
+    console.log("Resposta do servidor (" + response.status + "):", corpo);
+
     if (!response.ok) {
-      throw new Error("Erro no servidor: " + response.status);
+      mostrarStatus("❌ Erro " + response.status + ": " + corpo, "erro");
+      return;
     }
 
-    const resultado = await response.json();
+    const resultado = JSON.parse(corpo);
 
     if (resultado.valor !== null && resultado.valor !== undefined) {
       document.getElementById("valor").value = resultado.valor;
@@ -371,8 +326,8 @@ async function lerComprovante() {
     }
 
   } catch (err) {
-    console.error("Erro ao analisar comprovante:", err);
-    mostrarStatus("❌ Erro ao analisar. Tente novamente.", "erro");
+    console.error("Erro ao analisar comprovante:", err.message || err);
+    mostrarStatus("❌ " + (err.message || "Erro desconhecido"), "erro");
   } finally {
     btnEl.disabled = false;
   }
