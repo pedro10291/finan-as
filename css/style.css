@@ -18,7 +18,8 @@
 body{
   background:var(--bg);
   color:var(--text);
-  padding-bottom:90px;
+  padding-bottom:100px; /* Aumentado um pouco para dar respiro ao menu */
+  scroll-behavior:smooth;
 }
 
 .tela{
@@ -73,6 +74,12 @@ body{
   margin-bottom:20px;
 }
 
+.dashboard-topo{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
 .card{
   background:var(--card);
   border-radius:16px;
@@ -80,6 +87,15 @@ body{
   margin-bottom:15px;
   border:1px solid var(--border);
   box-shadow:0 2px 10px rgba(0,0,0,0.04);
+}
+
+.destaque-card{
+  background:linear-gradient(135deg, #163E3C, #245956);
+  color:white;
+}
+
+.destaque-card .valor{
+  color:white;
 }
 
 .kpi-grid{
@@ -143,10 +159,18 @@ button{
   cursor:pointer;
   font-weight:600;
   width:100%;
+  transition:0.2s;
 }
 
 button:hover{
-  opacity:0.9;
+  opacity:0.95;
+  transform:translateY(-1px);
+}
+
+.btn-logout{
+  width:auto;
+  padding:10px 16px;
+  background:#dc2626;
 }
 
 .filtros{
@@ -169,6 +193,11 @@ button:hover{
   justify-content:space-between;
   align-items:center;
   border:1px solid var(--border);
+  transition:0.2s;
+}
+
+.item-gasto:hover{
+  transform:translateY(-2px);
 }
 
 .item-info h4{
@@ -183,59 +212,54 @@ button:hover{
   font-size:0.8rem;
 }
 
+.btn-excluir{
+  border:none;
+  background:#fee2e2;
+  color:#dc2626;
+  width:auto;
+  padding:8px 10px;
+  border-radius:8px;
+  margin-left:10px;
+}
+
+.btn-excluir:hover{
+  background:#fecaca;
+}
+
+/* CORRIGIDO: Menu fixado com z-index e tratamento para telas infinitas/celulares */
 .bottom-nav{
   position:fixed;
   bottom:0;
   left:0;
   width:100%;
-  height:70px;
+  min-height:70px;
+  height:auto;
   background:var(--dark);
-  display:none;
+  display:none; /* O JS muda para flex quando logado */
   justify-content:space-around;
   align-items:center;
+  z-index:9999; /* Mantém o menu na frente de qualquer card ou lista */
+  padding-bottom: env(safe-area-inset-bottom); /* Evita que o menu suma em iPhones novos */
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
 }
 
+/* CORRIGIDO: Melhorado o espaçamento de clique (touch target) no mobile */
 .nav-item{
   color:#A3BFBD;
   text-decoration:none;
   font-size:0.85rem;
+  padding:15px 10px;
+  flex: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .nav-item.active{
   color:white;
   font-weight:bold;
-}
-
-/* COLE NO FINAL DO CSS */
-
-.dashboard-topo{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.btn-logout{
-  width:auto;
-  padding:10px 16px;
-  background:#dc2626;
-}
-
-.btn-logout:hover{
-  opacity:0.9;
-}
-
-.destaque-card{
-  background:linear-gradient(
-    135deg,
-    #163E3C,
-    #245956
-  );
-
-  color:white;
-}
-
-.destaque-card .valor{
-  color:white;
 }
 
 .barra-container{
@@ -259,37 +283,107 @@ button:hover{
   font-size:0.9rem;
 }
 
-.item-gasto{
-  transition:0.2s;
+/* ================= OCR / LEITOR DE COMPROVANTE ================= */
+.ocr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: #F8FAFC;
+  border: 2px dashed #CBD5E1;
+  padding: 30px 20px;
+  margin-bottom: 25px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
 }
 
-.item-gasto:hover{
-  transform:translateY(-2px);
+.ocr-container:hover {
+  border-color: var(--dark);
+  background: white;
 }
 
-.btn-excluir{
-  border:none;
-  background:#fee2e2;
-  color:#dc2626;
-  width:auto;
-  padding:8px 10px;
-  border-radius:8px;
-  margin-left:10px;
+.ocr-icon {
+  font-size: 2.5rem;
+  margin-bottom: 8px;
 }
 
-.btn-excluir:hover{
-  background:#fecaca;
+.ocr-container h3 {
+  color: var(--dark);
+  font-size: 1.15rem;
+  margin-bottom: 5px;
 }
 
-button{
-  transition:0.2s;
+.ocr-container p {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 20px;
+  line-height: 1.4;
 }
 
-button:hover{
-  opacity:0.95;
-  transform:translateY(-1px);
+input[type="file"]#input-comprovante {
+  display: none;
 }
 
-body{
-  scroll-behavior:smooth;
+.custom-file-upload {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px 24px;
+  cursor: pointer;
+  background: var(--light);
+  color: var(--dark);
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 1px solid rgba(22, 62, 60, 0.1);
+  transition: all 0.2s ease;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.custom-file-upload:hover {
+  background: #d4ecea;
+  transform: translateY(-2px);
+}
+
+.custom-file-upload.arquivo-selecionado {
+  background: #e0f2fe;
+  color: #0369a1;
+  border-color: #7dd3fc;
+}
+
+#btn-ler-comprovante {
+  background: linear-gradient(135deg, var(--dark) 0%, #245956 100%);
+  margin-top: 5px;
+}
+
+.status-ocr {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-align: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  min-height: 20px;
+  transition: all 0.2s ease;
+}
+
+.status-sucesso {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-aviso {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.status-erro {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-carregando {
+  background: var(--light);
+  color: var(--dark);
 }
