@@ -326,7 +326,7 @@ async function lerComprovante() {
   const file = inputEl.files[0];
 
   if (previewEl) {
-    previewEl.src = URL.createObjectURL(file);
+    const fr = new FileReader(); fr.onload = e => { previewEl.src = e.target.result; }; fr.readAsDataURL(file);
     previewEl.style.display = "block";
   }
 
