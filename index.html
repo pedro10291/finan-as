@@ -113,7 +113,8 @@
         </label>
         <input type="file" id="input-comprovante" accept="image/*">
 
-        <button type="button" id="btn-ler-comprovante">✨ Extrair Valor</button>
+        <button type="button" id="btn-ler-comprovante">✨ Analisar com IA</button>
+        <img id="ocr-preview" src="" alt="Preview do comprovante" style="display:none; max-width:100%; max-height:180px; border-radius:10px; margin-top:12px; object-fit:contain;">
         <div id="ocr-status" class="status-ocr"></div>
       </div>
 
@@ -191,7 +192,6 @@
   </nav>
 
   <script src="js/script.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.0/dist/tesseract.min.js"></script>
 
 </body>
 </html>

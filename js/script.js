@@ -311,47 +311,121 @@ function formatarMoeda(valor) {
 }
 
 // ==========================================
-// FUNÇÃO NOVA: LEITOR DE COMPROVANTE (OCR)
+// LEITOR DE COMPROVANTE — Claude Vision API
 // ==========================================
 async function lerComprovante() {
   const inputEl = document.getElementById("input-comprovante");
   const statusEl = document.getElementById("ocr-status");
   const btnEl = document.getElementById("btn-ler-comprovante");
+  const previewEl = document.getElementById("ocr-preview");
 
   if (!inputEl.files || inputEl.files.length === 0) {
-    alert("Selecione uma imagem primeiro!");
+    mostrarStatus("⚠️ Selecione uma imagem primeiro!", "aviso");
     return;
   }
 
-  statusEl.innerText = "⏳ Processando...";
+  const file = inputEl.files[0];
+
+  // Mostra preview da imagem selecionada
+  const urlPreview = URL.createObjectURL(file);
+  if (previewEl) {
+    previewEl.src = urlPreview;
+    previewEl.style.display = "block";
+  }
+
+  mostrarStatus("⏳ Analisando comprovante...", "carregando");
   btnEl.disabled = true;
 
   try {
-    // Usamos o Tesseract global, mas garantindo os caminhos corretos
-    const { data: { text } } = await Tesseract.recognize(
-      inputEl.files[0],
-      'por',
-      {
-        workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.0.0/dist/worker.min.js',
-        langPath: 'https://tessdata.projectnaptha.com/4.0.0',
-        corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.0.0/dist/tesseract-core.wasm.js',
-      }
-    );
+    // Converte imagem para base64
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(",")[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
 
-    const regexMonetario = /(?:R\$|VALOR)\s*[:]?\s*([\d\.]+(?:,\d{2}))/i;
-    const match = text.match(regexMonetario);
+    const mediaType = file.type || "image/jpeg";
 
-    if (match) {
-      document.getElementById("valor").value = match[1].replace(/\./g, '').replace(',', '.');
-      document.getElementById("descricao").value = "Comprovante Lido via OCR";
-      statusEl.innerText = "✅ Valor extraído!";
-    } else {
-      statusEl.innerText = "⚠️ Valor não detectado. Digite manualmente.";
+    // Chama a API Claude com visão
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{
+          role: "user",
+          content: [
+            {
+              type: "image",
+              source: { type: "base64", media_type: mediaType, data: base64 }
+            },
+            {
+              type: "text",
+              text: `Analise este comprovante ou nota fiscal e extraia as informações de pagamento.
+Responda SOMENTE com um JSON válido, sem texto adicional, sem markdown, sem explicações:
+{
+  "valor": <número decimal, ex: 45.90>,
+  "descricao": "<descrição curta do estabelecimento ou tipo de gasto, máx 40 chars>",
+  "categoria": "<uma dessas exatamente: Essencial, Lazer, Cartão>"
+}
+Se não conseguir identificar o valor, retorne {"valor": null, "descricao": "", "categoria": "Essencial"}.`
+            }
+          ]
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro na API: ${response.status}`);
     }
+
+    const data = await response.json();
+    const textoResposta = data.content
+      .filter(b => b.type === "text")
+      .map(b => b.text)
+      .join("");
+
+    // Parse seguro do JSON retornado
+    const limpo = textoResposta.replace(/```json|```/g, "").trim();
+    const resultado = JSON.parse(limpo);
+
+    if (resultado.valor !== null && resultado.valor !== undefined) {
+      document.getElementById("valor").value = resultado.valor;
+
+      if (resultado.descricao) {
+        document.getElementById("descricao").value = resultado.descricao;
+      }
+
+      if (resultado.categoria) {
+        const selectCategoria = document.getElementById("categoria");
+        const opcoes = Array.from(selectCategoria.options).map(o => o.value);
+        if (opcoes.includes(resultado.categoria)) {
+          selectCategoria.value = resultado.categoria;
+        }
+      }
+
+      // Garante que o tipo está como "gasto"
+      document.getElementById("tipo").value = "gasto";
+
+      mostrarStatus(`✅ Extraído: R$ ${resultado.valor} — ${resultado.descricao || ""}`, "sucesso");
+    } else {
+      mostrarStatus("⚠️ Valor não identificado. Preencha manualmente.", "aviso");
+    }
+
   } catch (err) {
-    console.error(err);
-    statusEl.innerText = "❌ Erro na leitura.";
+    console.error("Erro ao analisar comprovante:", err);
+    mostrarStatus("❌ Erro ao analisar. Tente novamente.", "erro");
   } finally {
     btnEl.disabled = false;
   }
+}
+
+// Exibe mensagem de status com estilo visual
+function mostrarStatus(mensagem, tipo) {
+  const el = document.getElementById("ocr-status");
+  if (!el) return;
+  el.innerText = mensagem;
+  el.className = "status-ocr status-" + tipo;
 }
